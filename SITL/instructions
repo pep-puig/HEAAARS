@@ -1,0 +1,16 @@
+#downloading libraries
+python -m
+
+#running this in windows terminal
+python -m dronekit_sitl copter --home=41.215385,1.732532,0,180
+python -m MAVProxy.mavproxy --master tcp:127.0.0.1:5760 --sitl 127.0.0.1:5501 --out 127.0.0.1:14550 --out 127.0.0.1:14551 --out 127.0.0.1:14552
+python -m MAVProxy.mavproxy --master tcp:127.0.0.1:5760 --sitl 127.0.0.1:5501 --out 127.0.0.1:14550 --out 127.0.0.1:14551
+
+#coordinates
+LAB == 41.215385, 1.732532
+home == 41.226995, 1.726484
+
+#running this in ubuntu
+source dronekit38-env/bin/activate
+
+python -m simple_goto.py --connect udp:127.0.0.1:14550
