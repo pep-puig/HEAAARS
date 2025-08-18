@@ -1,0 +1,36 @@
+class Navigator
+    # navigator class gets fed the type of vehicle that it will be navigating (Copter or Rover)
+
+    def is_guided_mode()
+        # uses DroneKit's built-in functions and returns BOOLEAN
+
+    def is_armable()
+        # uses DroneKit's built-in functions and returns BOOLEAN
+
+    def is_armed()
+        # uses DroneKit's built-in functions and returns BOOLEAN
+
+    def set_aerial_navigation_params()
+        # sets climbing and flying speeds based on json file 
+
+    def set_aquatic_navigation_params()
+        # sets swimming speeds based on json file
+
+    def take_off()
+        # uses DroneKit's built-in simple_takeoff() command
+
+    def command_aerial_goto()
+        # uses DroneKit's built-in go_to() command
+
+    def command_aquatic_goto()
+        # uses DroneKit's built-in go_to() command
+
+class Servo
+    # there are two servos, one for the hydrophone and one for the water sensors
+    # when I create the object I must let it know which one is which
+
+    def command_wind()
+        # sends signal to RC servo to wind up spool
+
+    def command_unwind()
+        # sends signal to RC servo to unwind the spool
