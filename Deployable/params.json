@@ -1,0 +1,27 @@
+{
+  "commanded_parameters": {
+    "climb_speed": null,
+    "fly_speed": null,
+    "swim_speed": null,
+    "servo_turns": null
+  },
+  "target_parameters": {
+    "fly_location": {
+      "latitude": null,
+      "longitude": null
+    },
+    "swim_location": {
+      "latitude": null,
+      "longitude": null
+    },
+    "mission_altitude": null,
+    "r2h_altitude": null
+  },
+  "thresholds": {
+    "min_battery_threshold": 22.8,
+    "distance2location_threshold": null,
+    "distance2altitude_threshold": null,
+    "max_mission_time": null,
+    "max_landing_time": null
+  }
+}

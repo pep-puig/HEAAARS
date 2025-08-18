@@ -1,9 +1,3 @@
-class FSM
-
-    def run()
-        # deals with transitioning states until next_state is none
-        # takes in inititial state as parameter
-
 class PoseHandler
 
     def get_home_location()
@@ -29,7 +23,7 @@ class PoseHandler
     def is_altitude_reached()
         # returns TRUE or FALSE
 
-class BateryHandler
+class BatteryHandler
 
     def get_battery()
         # calls dronekit method to check battery levels
