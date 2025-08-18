@@ -1,5 +1,12 @@
 from abc import ABC, abstractmethod
 from enum import Enum, auto
+from ..Handlers.handlers import (
+    PoseHandler,
+    BatteryHandler,
+    ParameterHandler,
+    TimeHandler,
+    WaterLandingHandler
+)
 
 # ----------------------
 # StateEnum holds all state names
@@ -26,6 +33,41 @@ class State(ABC):
     def run(self, robot):
         pass
 
+# ----------------------
+# FSM class is the state manager as it loops until there are no more states to go to
+# ----------------------
+class FSM:
+
+    def __init__(self, robot, initial_state, states_dict):
+
+        self.robot = robot
+        self.states = states_dict
+        self.current_state = self.states[initial_state]
+
+    def run(self):
+        """
+        Runs the FSM until no next state is set.
+        """
+        while self.current_state is not None:
+            print(f"Running state: {self.current_state.state_id}")
+            
+            # Execute current state logic
+            self.current_state.run(self.robot)
+            
+            # Record previous state
+            self.robot.previous_state = self.current_state.state_id
+            
+            # Determine next state
+            next_state_enum = self.current_state.next_state
+            if next_state_enum is None:
+                print("FSM finished: no next state.")
+                self.current_state = None
+            else:
+                self.current_state = self.states[next_state_enum]
+
+# ----------------------
+# RobotSystem holds vehicle type, handlers and commanders - all shared data is placed here
+# ----------------------
 class RobotSystem():
     def __init__(self):
 
