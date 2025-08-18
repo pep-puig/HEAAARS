@@ -1,0 +1,65 @@
+class FSM
+
+    def run()
+        # deals with transitioning states until next_state is none
+        # takes in inititial state as parameter
+
+class PoseHandler
+
+    def get_home_location()
+        # gets called in the init() state to record the position it took off from
+
+    def get_distance2location()
+        # calculates the distance between current location and target location
+
+    def is_distance2location_decreasing()
+        # checks whether error to target location is decreasing or not
+        # returns TRUE or FALSE
+
+    def is_location_reached()
+        # returns TRUE or FALSE 
+
+    def get_distance2altitude()
+        # calculates distance between current altitude and target altitodue
+
+    def is_distance2altitude_decreasing()
+        # checks whether error to target location is decreasing or not
+        # returns TRUE or FALSE
+    
+    def is_altitude_reached()
+        # returns TRUE or FALSE
+
+class BateryHandler
+
+    def get_battery()
+        # calls dronekit method to check battery levels
+
+    def is_empty()
+        # returns TRUE or FALSE depending on measurement reading
+
+class WaterLandingHandler
+
+    def is_water()
+        # returns TRUE or FALSE depending on sensor reading
+
+class ParameterHandler
+
+    def get_params()
+        # load json file and return as an object that get fed into FSM class
+
+class TimeHandler
+
+    def start_counter()
+        # starts counter using built-in python timer
+
+    def is_mission_timeout()
+        # compares time elapsed since mission start with time limit threshold
+        # returns TRUE or FALSE
+
+    def is_water_landing_timeout()
+        # compares time elapsed since water landing attempt with time limit threshold
+        # returns TRUE or FALSE
+
+    def is_correction_timeout()
+        # compares time elapsed since position correction attempt with time limit threshold
+        # returns TRUE or FALSE
