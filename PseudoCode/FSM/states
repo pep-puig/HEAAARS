@@ -1,6 +1,9 @@
 # This page lays out the pseudocode for what each state must do
 
 State: Init
+    - wait for vehicle mode to be:
+        GUIDED
+
     - connect to vehicles:
         aerial = connect('pixhawk1', wait_ready=True, baud=57600)
         aquatic = connect('pixhawk2', wait_ready=True, baud=57600)
