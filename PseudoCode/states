@@ -97,6 +97,13 @@ State: LandingAtTarget
 
     - go to next_state
 
+State: Monitoring
+    - start monitoring timer
+
+    - check that monitoring time does not exceed max_monitoring_time from json file
+
+    - when monitoring time reaches threhold, go to takeoff state
+
 State: Swim2TargetLocation
     - check battery level before flying:
         if aerial_battery <80% or aquatic_battery < 80%

@@ -1,29 +1,30 @@
 {
   "commanded_parameters": {
     "climb_speed": null,
-    "fly_speed": null,
+    "fly_speed": 10,
     "swim_speed": null,
     "servo_turns": null
   },
   "target_parameters": {
     "fly_location": {
-      "latitude": null,
-      "longitude": null
+      "latitude": 41.211995,
+      "longitude": 1.733500
     },
     "swim_location": {
       "latitude": null,
       "longitude": null
     },
-    "mission_altitude": null,
-    "r2h_altitude": null,
+    "mission_altitude": 10,
+    "r2h_altitude": 10,
     "water_landing_altitude": 0
   },
   "thresholds": {
     "min_battery_threshold": 22.8,
     "homelandingdistance_threshold": 1,
-    "distance2location_threshold": null,
-    "distance2altitude_threshold": null,
-    "max_mission_time": null,
-    "max_landing_time": null
+    "distance2location_threshold": 5,
+    "distance2altitude_threshold": 1,
+    "max_mission_time": 0,
+    "max_landing_time": 60,
+    "max_monitoring_time":30
   }
 }
