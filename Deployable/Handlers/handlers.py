@@ -18,16 +18,32 @@ class PoseHandler:
     def get_home_location(self, vehicle):
         """
         Called in InitState to record the vehicle's starting location.
+        :param vehicle: DroneKit Vehicle instance
         :return: LocationGlobalRelative of current position
         """
+        return self.get_current_location(vehicle)
+
+    def get_current_location(self, vehicle):
+        """
+        Returns the current location of the vehicle.
+        :param vehicle: DroneKit Vehicle instance
+        :return: LocationGlobalRelative object
+        """
         return vehicle.location.global_relative_frame
+
+    def get_current_altitude(self, vehicle):
+        """
+        Returns the current altitude of the vehicle.
+        :param vehicle: DroneKit Vehicle instance
+        :return: Altitude in meters
+        """
+        return vehicle.location.global_relative_frame.alt
 
     def get_distance2location(self, vehicle, target_location):
         """
         Computes ground distance between current position and target_location.
-        Uses get_distance_metres() logic.
         """
-        current_loc = vehicle.location.global_relative_frame
+        current_loc = self.get_current_location(vehicle)
         return self.get_distance_metres(current_loc, target_location)
 
     def is_distance2location_decreasing(self, vehicle, target_location):
@@ -52,7 +68,7 @@ class PoseHandler:
         """
         Returns absolute difference between current altitude and target altitude (in meters).
         """
-        current_alt = vehicle.location.global_relative_frame.alt
+        current_alt = self.get_current_altitude(vehicle)
         return abs(current_alt - target_altitude)
 
     def is_distance2altitude_decreasing(self, vehicle, target_altitude):

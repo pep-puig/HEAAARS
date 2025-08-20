@@ -15,10 +15,12 @@
       "longitude": null
     },
     "mission_altitude": null,
-    "r2h_altitude": null
+    "r2h_altitude": null,
+    "water_landing_altitude": 0
   },
   "thresholds": {
     "min_battery_threshold": 22.8,
+    "homelandingdistance_threshold": 1,
     "distance2location_threshold": null,
     "distance2altitude_threshold": null,
     "max_mission_time": null,
