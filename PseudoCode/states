@@ -1,0 +1,147 @@
+from dronekit import VehicleMode
+
+State: Init
+   
+    - connect to vehicles:
+        aerial = connect('pixhawk1', wait_ready=True, baud=57600)
+        aquatic = connect('pixhawk2', wait_ready=True, baud=57600)
+    
+    - read parameters from json file
+        check all parameters have values    
+
+    - check battery level:
+        if aerial_battery < threshold or aquatic_battery < threshold
+            next_mission = none
+
+    - save home location
+
+    - if VehicleMode is GUIDED, go to TakeOff state
+    
+State: TakeOff
+    - check battery level before takeoff:
+        if aerial_battery < threshold or aquatic_battery <  threshold
+            target_altitude = R2H_altitude
+            next_state = none
+
+    - read altitudes from json file
+        - mission_altitude
+        - R2H_altitude
+
+    - check previous state:
+        if previous_state = init
+            target_altitude = mission_altitude
+            next_state = Fly2TargetLocation
+        else 
+            target_altitude = R2H_altitude
+            next_state = Return2Home
+
+    - arm aerial 
+        while not aerial.is_armable
+            print('arming')
+            delay
+
+    - command simple_takeoff
+        remember to set vertical speed
+        while target_altitude has not been reached
+            check current altitude every 0.5 seconds 
+            exit loop once it has reached target_altitude
+
+    - go to next_state
+
+State: Fly2TargetLocation
+    - check battery level before flying:
+        if aerial_battery < threshold% or aquatic_battery < threshold%
+            target_altitude = R2H_altitude
+            next_state = Return2Home
+
+    - read target_location from json file
+
+    # check distance to target and battery level as the drone flies to target location
+    - command goto(target_location)
+        while target_location has not been reached
+            calculate distance_to_target every 0.5 seconds
+            if distance_to_target < threshold
+                next_state = LandingAtTarget
+                exit loop
+            check battery level 
+            if battery_level < threshold
+                next_state = Return2Home
+                exit looop
+            delay(0.5)
+
+    - go to next_state
+
+State: LandingAtTarget
+    - get the following params from json:
+                - R2H_altitude
+                - 
+    
+    - check battery level before flying:
+        if aerial_battery < threshold% or aquatic_battery < threshold%
+            target_altitude = R2H_altitude
+            next_state = Return2Home
+
+    - unspool servo with water_sensor
+
+    - command descent("down to below the original landing altitude")
+        while landing_sensor are not HIGH
+            keep track of time
+            if maximum_descent_time has been met
+                next_state = Return2Home
+                exit loop
+    
+    - disarm aerial and arm aquatic
+        while not aquatic.is_armable
+        print('arming')
+            delay
+
+    - go to next_state
+
+State: Swim2TargetLocation
+    - check battery level before flying:
+        if aerial_battery <80% or aquatic_battery < 80%
+            target_altitude = R2H_altitude
+            next_state = TakeOff
+
+    - read target_location from json file
+
+    -  command goto(target_location)
+        while target_location has not been reached
+            calculate distance_to_target every 0.5 seconds
+            keep track of time
+            if distance_to_target is not decreasing at desired rate
+                next_state = TakeOff
+                exit looop
+            if distance_to_target < threshold
+                next_state = TakeOff
+                exit loop
+            check battery level 
+            if battery_level < threshold
+                next_state = TakeOff
+                exit looop
+
+    - disarm aquatic
+
+    - go to next_state
+
+State: Return2Home
+
+    - command goto(home_location)
+        while home_location has not been reached
+            calculate distance_to_home every 0.5 seconds
+            if distance_to_home < threshold
+                next_state = LandingAtHome
+                exit loop
+            check battery level 
+            if battery_level < threshold
+                next_state = LandingAtHome
+                exit looop
+
+State: LandingAtHome
+
+    - vehicle.mode = VehicleMode("LAND")
+
+    - wait for altitude reading to be zero
+
+    - disarm aerial
+
