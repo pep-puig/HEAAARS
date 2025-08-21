@@ -1,7 +1,8 @@
 import time
-from FSM.fsm import FSM, RobotSystem
-from FSM.fsm import StateEnum
-from Deployable.Missions.fly_swim_to_states import Init, TakeOff, Fly2TargetLocation, LandingAtTarget, Swim2Target, Return2Home, LandingAtHome
+from Utilities_SITL.FSM_SITL.fsm_SITL import FSM, RobotSystem
+from Utilities_SITL.FSM_SITL.fsm_SITL import StateEnum
+# from Deployable.Missions.fly_swim_to_states import Init, TakeOff, Fly2TargetLocation, LandingAtTarget, Swim2Target, Return2Home, LandingAtHome
+from Missions_SITL.fly_land_monitor import Init, TakeOff, Fly2TargetLocation, LandingAtTarget, Monitoring, Return2Home, LandingAtHome
 
 def main():
     # Create RobotSystem instance
@@ -12,8 +13,7 @@ def main():
     takeoff_state = TakeOff()
     fly2target_state = Fly2TargetLocation()
     landing_target_state = LandingAtTarget()
-    #swim2target_state = Swim2Target()
-    #monitoring_state = Monitoring()
+    monitoring_state = Monitoring()
     return_home_state = Return2Home()
     landing_home_state = LandingAtHome()
 
@@ -23,8 +23,7 @@ def main():
         StateEnum.TAKEOFF: takeoff_state,
         StateEnum.FLY2TARGETLOCATION: fly2target_state,
         StateEnum.LANDINGATTARGET: landing_target_state,
-        #StateEnum.SWIM2TARGETLOCATION: swim2target_state,
-        #StateEnum.MONITORING: monitoring_state,
+        StateEnum.MONITORING: monitoring_state,
         StateEnum.RETURN2HOME: return_home_state,
         StateEnum.LANDINGATHOME: landing_home_state
     }

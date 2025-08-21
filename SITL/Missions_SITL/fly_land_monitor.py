@@ -1,8 +1,10 @@
 import time
-from dronekit import VehicleMode, LocationGlobalRelative
-from Deployable.FSM.fsm import StateEnum, State , FSM, RobotSystem
-from Deployable.Handlers.handlers import PoseHandler, BatteryHandler, ParameterHandler, TimeHandler, WaterLandingHandler
-from Deployable.Commanders.commanders import Navigator, Servo
+from pymavlink import mavutil
+from dronekit import connect, VehicleMode, LocationGlobalRelative
+from Utilities_SITL.FSM_SITL.fsm_SITL import StateEnum, State , FSM, RobotSystem
+from Utilities_SITL.Handlers_SITL.handlers_SITL import PoseHandler, BatteryHandler, ParameterHandler, TimeHandler
+from Utilities_SITL.Commanders_SITL.commanders_SITL import Navigator
+import argparse
 
 class Init(State):
     def __init__(self):
@@ -17,20 +19,16 @@ class Init(State):
 
         # Connect vehicles if not connected
         if robot.aerial is None:
-            robot.aerial = robot.navigator.connect('pixhawk1', baud=57600, wait_ready=True)
-        if robot.aquatic is None:
-            robot.aquatic = robot.navigator.connect('pixhawk2', baud=57600, wait_ready=True)
+            parser = argparse.ArgumentParser(description='Commands')
+            parser.add_argument('--connect')
+            args = parser.parse_args()
+            connection_string = args.connect
+            robot.aerial = connect(connection_string, wait_ready=True)
 
-        # Initialize servos if not already done
-        if robot.servo_hydrophone is None:
-            # Example GPIO pin numbers; replace with your actual wiring
-            robot.servo_hydrophone = Servo(servo_type="hydrophone", gpio_pin=17)
-        if robot.servo_water_sensor is None:
-            robot.servo_water_sensor = Servo(servo_type="water_sensor", gpio_pin=27)
+        print(f"Battery level: {robot.aerial.battery.level}%")
 
         # Check battery using BatteryHandler
-        if robot.battery.is_empty(robot.aerial, battery_threshold) or \
-           robot.battery.is_empty(robot.aquatic, battery_threshold):
+        if robot.battery.is_empty(robot.aerial, battery_threshold):
             print("Battery below threshold, aborting mission")
             self.next_state = None
             return
@@ -52,6 +50,8 @@ class Init(State):
 
         # Set the next state for FSM
         self.next_state = StateEnum.TAKEOFF
+        #self.next_state = None
+
 
 class TakeOff(State):
     def __init__(self):
@@ -66,8 +66,7 @@ class TakeOff(State):
         r2h_altitude = robot.params["target_parameters"]["r2h_altitude"]
 
         # Check battery levels before takeoff
-        if robot.battery.is_empty(robot.aerial, battery_threshold) or \
-           robot.battery.is_empty(robot.aquatic, battery_threshold):
+        if robot.battery.is_empty(robot.aerial, battery_threshold):
             print("Battery below threshold before takeoff. Aborting mission.")
             self.next_state = None
             return
@@ -123,8 +122,7 @@ class Fly2TargetLocation(State):
         fly_speed = robot.params["commanded_parameters"]["fly_speed"]
 
         # Check battery before starting flight
-        if (robot.battery.is_empty(robot.aerial, battery_threshold) or
-            robot.battery.is_empty(robot.aquatic, battery_threshold)):
+        if robot.battery.is_empty(robot.aerial, battery_threshold):
             print("Battery below threshold, returning home")
             self.next_state = StateEnum.RETURN2HOME
             return
@@ -134,7 +132,7 @@ class Fly2TargetLocation(State):
 
         print(f"Commanding aerial vehicle to fly to target location: {target_location}")
         robot.navigator.set_aerial_navigation_params(climb_speed, fly_speed)
-        robot.navigator.command_aerial_goto(target_location)
+        robot.navigator.command_aerial_goto(robot.aerial, target_location)
 
         robot.previous_state = StateEnum.FLY2TARGETLOCATION
 
@@ -143,19 +141,18 @@ class Fly2TargetLocation(State):
             time.sleep(0.5)
 
             # Check battery mid-flight
-            if (robot.battery.is_empty(robot.aerial, battery_threshold) or
-                robot.battery.is_empty(robot.aquatic, battery_threshold)):
+            if robot.battery.is_empty(robot.aerial, battery_threshold):
                 print("Battery low during flight, returning home")
                 self.next_state = StateEnum.RETURN2HOME
                 break
         else:
             # Target reached
             print("Target location reached, transitioning to LandingAtTarget")
-            self.next_state = StateEnum.LANDING_AT_TARGET
+            self.next_state = StateEnum.LANDINGATTARGET
 
 class LandingAtTarget(State):
     def __init__(self):
-        super().__init__(StateEnum.LANDING_AT_TARGET)
+        super().__init__(StateEnum.LANDINGATTARGET)
 
     def run(self, robot):
         print("Entering LandingAtTarget state...")
@@ -163,14 +160,13 @@ class LandingAtTarget(State):
         # Get params from json file
         battery_threshold = robot.params["thresholds"]["min_battery_threshold"]
         target_lat = robot.params["target_parameters"]["fly_location"]["latitude"]
-        target_lon = robot.params["target_parameters"]["fly_location"]["fly_location"]["longitude"]
+        target_lon = robot.params["target_parameters"]["fly_location"]["longitude"]
         water_landing_alt = robot.params["target_parameters"]["water_landing_altitude"]
 
-        robot.previous_state = StateEnum.LANDING_AT_TARGET
+        robot.previous_state = StateEnum.LANDINGATTARGET
 
         # Pre-descent battery check
-        if robot.battery.is_empty(robot.aerial, battery_threshold) or \
-           robot.battery.is_empty(robot.aquatic, battery_threshold):
+        if robot.battery.is_empty(robot.aerial, battery_threshold):
             print("Battery below threshold, switching to Return2Home")
             self.next_state = StateEnum.RETURN2HOME
             return     
@@ -185,33 +181,31 @@ class LandingAtTarget(State):
 
         # Command descent
         print(f"Descending to target location at altitude {water_landing_alt} meters")
-        robot.navigator.command_aerial_goto(target_location)
+        robot.navigator.command_aerial_goto(robot.aerial, target_location)
 
         # Monitor descent using WaterLandingHandler
         start_time = time.time()
         max_landing_time = robot.params["thresholds"]["max_landing_time"]
 
-        while not robot.water_landing.is_water():
+        while not robot.pose.is_altitude_reached(robot.aerial, water_landing_alt):
             elapsed = time.time() - start_time
             if max_landing_time and elapsed > max_landing_time:
                 print("Maximum landing time exceeded, switching to Return2Home")
                 self.next_state = StateEnum.RETURN2HOME
                 return
+
+            current_altitude = robot.pose.get_current_altitude(robot.aerial)
+            print(f"Current altitude: {current_altitude:.1f} m, target: {water_landing_alt} m")
             time.sleep(0.5)
 
         print("Water detected, landing complete")
 
-        # Wind water sensor servo
-        print("Winding water sensor servo")
-        robot.servo_water_sensor.command_wind() 
-
         # Disarm aerial and arm aquatic using Navigator
         print("Disarming aerial and arming aquatic vehicle")
-        robot.navigator.disarm(robot.aerial)
-        robot.navigator.arm_vehicle(robot.aquatic)
+        robot.navigator.disarm_vehicle(robot.aerial, force=True)
 
         # Set next state
-        self.next_state = StateEnum.SWIM2TARGET
+        self.next_state = StateEnum.MONITORING
         print("LandingAtTarget complete, transitioning to Swim2Target")
 
 class Monitoring(State):
@@ -252,7 +246,7 @@ class Return2Home(State):
         home_location = robot.home_location
 
         print(f"Flying back to home location: {home_location}")
-        robot.navigator.command_aerial_goto(home_location)
+        robot.navigator.command_aerial_goto(robot.aerial, home_location)
 
         while True:
             # Check if we have arrived back home
@@ -262,8 +256,7 @@ class Return2Home(State):
                 break
 
             # Mid-flight battery check
-            if robot.battery.is_empty(robot.aerial, battery_threshold) or \
-               robot.battery.is_empty(robot.aquatic, battery_threshold):
+            if robot.battery.is_empty(robot.aerial, battery_threshold):
                 print("Battery low while returning home – still landing at home")
                 self.next_state = StateEnum.LANDINGATHOME
                 break
@@ -296,10 +289,6 @@ class LandingAtHome(State):
                 break
 
             time.sleep(0.5)
-
-        # Disarm aerial once landed
-        print("Disarming aerial vehicle")
-        robot.navigator.disarm(robot.aerial)
 
         print("LandingAtHome complete. Mission finished.")
         self.next_state = None
