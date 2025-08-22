@@ -14,10 +14,10 @@ from Utilities_SITL.Handlers_SITL.handlers_SITL import (
 class StateEnum(Enum):
     INIT = auto()
     TAKEOFF = auto()
-    FLY2TARGETLOCATION = auto()
+    FLY2TARGET = auto()
     LANDINGATTARGET = auto()
     MONITORING = auto()
-    SWIM_TO_TARGET = auto()
+    SWIM2TARGET = auto()
     RETURN2HOME = auto()
     LANDINGATHOME = auto()
 

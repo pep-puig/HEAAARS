@@ -2,7 +2,7 @@
   "commanded_parameters": {
     "climb_speed": 1,
     "fly_speed": 10,
-    "swim_speed": 0,
+    "swim_speed": 5,
     "servo_turns": 0
   },
   "target_parameters": {
@@ -11,8 +11,8 @@
       "longitude": 1.733071
     },
     "swim_location": {
-      "latitude": 0,
-      "longitude": 0
+      "latitude": 41.215512,
+      "longitude": 1.733095
     },
     "mission_altitude": 5,
     "r2h_altitude": 5,
@@ -23,7 +23,7 @@
     "homelandingdistance_threshold": 1,
     "distance2location_threshold": 5,
     "distance2altitude_threshold": 1,
-    "max_mission_time": 0,
+    "max_mission_time": 90,
     "max_landing_time": 60,
     "max_monitoring_time":30
   }

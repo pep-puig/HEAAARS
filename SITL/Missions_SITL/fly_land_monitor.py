@@ -74,7 +74,7 @@ class TakeOff(State):
         # Determine target altitude and next state based on previous state
         if robot.previous_state == StateEnum.INIT:
             target_altitude = mission_altitude
-            self.next_state = StateEnum.FLY2TARGETLOCATION
+            self.next_state = StateEnum.FLY2TARGET
         else:
             target_altitude = r2h_altitude
             self.next_state = StateEnum.RETURN2HOME
@@ -107,7 +107,7 @@ class TakeOff(State):
 
 class Fly2TargetLocation(State):
     def __init__(self):
-        super().__init__(StateEnum.FLY2TARGETLOCATION)
+        super().__init__(StateEnum.FLY2TARGET)
     
     def run(self, robot):
         print("Entering Fly2TargetLocation state...")

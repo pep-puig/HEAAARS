@@ -50,7 +50,7 @@ class Navigator:
             time.sleep(0.5)
         print("Vehicle armed!")
 
-    def disarm_vehicle(self, vehicle, force=False):
+    def disarm_aerial(self, vehicle, force=False):
         """
         Disarm the given vehicle safely using MAVLink.
         
@@ -78,6 +78,32 @@ class Navigator:
             time.sleep(1)
 
         print("Vehicle disarmed successfully.")
+
+    def disarm_aquatic(self, vehicle):
+        """
+        Switch Rover to HOLD mode and disarm.
+        """
+        print("Switching to HOLD mode...")
+        vehicle.mode = VehicleMode("HOLD")
+
+        time.sleep(1)
+
+        # wait until mode changes
+        while vehicle.mode.name != "HOLD":
+            print(" Waiting for mode change...")
+            time.sleep(0.5)
+
+        print("Now disarming rover...")
+        vehicle.armed = False
+
+        time.sleep(1)
+
+        # wait until disarmed
+        while vehicle.armed:
+            print(" Waiting for rover to disarm...")
+            time.sleep(0.5)
+
+        print("Rover disarmed successfully.")
 
     def take_off(self, vehicle, target_altitude):
         """
