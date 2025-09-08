@@ -1,6 +1,6 @@
 import time
 from dronekit import VehicleMode
-import RPi.GPIO as GPIO
+from pymavlink import mavutil
 
 class Navigator:
     """
@@ -50,6 +50,61 @@ class Navigator:
             time.sleep(0.5)
         print("Vehicle armed!")
 
+    def disarm_aerial(self, vehicle, force=False):
+        """
+        Disarm the given vehicle safely using MAVLink.
+        
+        :param vehicle: DroneKit vehicle instance
+        :param force: If True, force disarm even in air (use with caution!)
+        """
+        print("Disarming vehicle...")
+
+        # Send MAVLink disarm command
+        vehicle._master.mav.command_long_send(
+            vehicle._master.target_system,
+            vehicle._master.target_component,
+            mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
+            0,            # confirmation
+            0,            # param1 = 0 → disarm
+            21196 if force else 0,  # param2 = 21196 → force disarm
+            0, 0, 0, 0, 0
+        )
+
+        time.sleep(1)
+
+        # Wait until the vehicle is disarmed
+        while vehicle.armed:
+            print(" Waiting for vehicle to disarm...")
+            time.sleep(1)
+
+        print("Vehicle disarmed successfully.")
+
+    def disarm_aquatic(self, vehicle):
+        """
+        Switch Rover to HOLD mode and disarm.
+        """
+        print("Switching to HOLD mode...")
+        vehicle.mode = VehicleMode("HOLD")
+
+        time.sleep(1)
+
+        # wait until mode changes
+        while vehicle.mode.name != "HOLD":
+            print(" Waiting for mode change...")
+            time.sleep(0.5)
+
+        print("Now disarming rover...")
+        vehicle.armed = False
+
+        time.sleep(1)
+
+        # wait until disarmed
+        while vehicle.armed:
+            print(" Waiting for rover to disarm...")
+            time.sleep(0.5)
+
+        print("Rover disarmed successfully.")
+
     def take_off(self, vehicle, target_altitude):
         """
         Commands aerial vehicle to take off to target altitude.
@@ -73,49 +128,3 @@ class Navigator:
         Command aquatic vehicle using simple_goto.
         """
         vehicle.simple_goto(target_location, groundspeed=self.aquatic_swim_speed)
-
-class Servo:
-    """
-    Simple RC servo commander for hydrophone and water sensor spools
-    using Raspberry Pi GPIO PWM.
-    """
-
-    def __init__(self, servo_type, gpio_pin, min_pwm=2.5, max_pwm=12.5):
-        """
-        :param servo_type: A string to identify which servo ('hydrophone' or 'water_sensor')
-        :param gpio_pin: GPIO pin number the servo signal wire is connected to
-        :param min_pwm: Duty cycle for wind direction
-        :param max_pwm: Duty cycle for unwind direction
-        """
-        self.servo_type = servo_type
-        self.gpio_pin = gpio_pin
-        self.min_pwm = min_pwm
-        self.max_pwm = max_pwm
-
-        # Setup GPIO
-        GPIO.setmode(GPIO.BCM)  # Use BCM numbering
-        GPIO.setup(self.gpio_pin, GPIO.OUT)
-
-        # Initialize PWM at 50 Hz (typical for servos)
-        self.pwm = GPIO.PWM(self.gpio_pin, 50)
-        self.pwm.start(0)  # Initial duty cycle = 0 (no movement)
-
-    def command_wind(self):
-        """Rotate servo in 'wind' direction (minimum PWM)."""
-        print(f"{self.servo_type} winding")
-        self.pwm.ChangeDutyCycle(self.min_pwm)
-        time.sleep(0.5)
-        self.pwm.ChangeDutyCycle(0)  # Stop signal to prevent jitter
-
-    def command_unwind(self):
-        """Rotate servo in 'unwind' direction (maximum PWM)."""
-        print(f"{self.servo_type} unwinding")
-        self.pwm.ChangeDutyCycle(self.max_pwm)
-        time.sleep(0.5)
-        self.pwm.ChangeDutyCycle(0)  # Stop signal to prevent jitter
-
-    def cleanup(self):
-        """Release GPIO resources."""
-        self.pwm.stop()
-        GPIO.cleanup(self.gpio_pin)
-""

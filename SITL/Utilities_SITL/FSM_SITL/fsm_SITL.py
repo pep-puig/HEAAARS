@@ -1,12 +1,11 @@
 from abc import ABC, abstractmethod
 from enum import Enum, auto
-from Commanders.commanders import Navigator, Servo
-from Handlers.handlers import (
+from Utilities_SITL.Commanders_SITL.commanders_SITL import Navigator
+from Utilities_SITL.Handlers_SITL.handlers_SITL import (
     PoseHandler,
     BatteryHandler,
     ParameterHandler,
     TimeHandler,
-    WaterLandingHandler
 )
 
 # ----------------------
@@ -15,11 +14,12 @@ from Handlers.handlers import (
 class StateEnum(Enum):
     INIT = auto()
     TAKEOFF = auto()
-    FLY_TO_TARGET = auto()
-    LANDING_TARGET = auto()
-    SWIM_TO_TARGET = auto()
-    RETURN_HOME = auto()
-    LANDING_HOME = auto()
+    FLY2TARGET = auto()
+    LANDINGATTARGET = auto()
+    MONITORING = auto()
+    SWIM2TARGET = auto()
+    RETURN2HOME = auto()
+    LANDINGATHOME = auto()
 
 # ----------------------
 # State abstact class is a template for what all state will have
@@ -79,14 +79,11 @@ class RobotSystem():
         # Handlers
         self.pose = PoseHandler()
         self.battery = BatteryHandler()
-        self.parameters = ParameterHandler()      # Reads mission JSON
+        self.parameters = ParameterHandler("params_SITL.json")      # Reads mission JSON
         self.time = TimeHandler()
-        self.water_landing = WaterLandingHandler()
 
         # Commanders
         self.navigator = Navigator()              # Will be fed aerial or aquatic
-        self.servo_hydrophone = Servo("hydrophone")
-        self.servo_water_sensor = Servo("water_sensor")
 
         # Mission data
         self.params = {}           # Loaded JSON parameters
