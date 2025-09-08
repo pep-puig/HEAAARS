@@ -1,4 +1,6 @@
 import time
+from gpiozero import Servo
+from time import sleep
 from dronekit import VehicleMode
 import RPi.GPIO as GPIO
 
@@ -74,48 +76,42 @@ class Navigator:
         """
         vehicle.simple_goto(target_location, groundspeed=self.aquatic_swim_speed)
 
-class Servo:
+class ServoController:
     """
     Simple RC servo commander for hydrophone and water sensor spools
-    using Raspberry Pi GPIO PWM.
+    using gpiozero Servo.
     """
 
-    def __init__(self, servo_type, gpio_pin, min_pwm=2.5, max_pwm=12.5):
+    def __init__(self, servo_type, gpio_pin, min_value=-1, max_value=1):
         """
-        :param servo_type: A string to identify which servo ('hydrophone' or 'water_sensor')
+        :param servo_type: 'hydrophone' or 'water_sensor'
         :param gpio_pin: GPIO pin number the servo signal wire is connected to
-        :param min_pwm: Duty cycle for wind direction
-        :param max_pwm: Duty cycle for unwind direction
+        :param min_value: minimum servo value (-1 corresponds to full reverse)
+        :param max_value: maximum servo value (+1 corresponds to full forward)
         """
         self.servo_type = servo_type
         self.gpio_pin = gpio_pin
-        self.min_pwm = min_pwm
-        self.max_pwm = max_pwm
+        self.min_value = min_value
+        self.max_value = max_value
 
-        # Setup GPIO
-        GPIO.setmode(GPIO.BCM)  # Use BCM numbering
-        GPIO.setup(self.gpio_pin, GPIO.OUT)
-
-        # Initialize PWM at 50 Hz (typical for servos)
-        self.pwm = GPIO.PWM(self.gpio_pin, 50)
-        self.pwm.start(0)  # Initial duty cycle = 0 (no movement)
+        # Initialize gpiozero servo
+        self.servo = Servo(self.gpio_pin, min_pulse_width=0.0006, max_pulse_width=0.0024)
+        # 600-2400 µs range corresponds to min_pulse_width=0.0006, max_pulse_width=0.0024
 
     def command_wind(self):
-        """Rotate servo in 'wind' direction (minimum PWM)."""
+        """Rotate servo in 'wind' direction (minimum)."""
         print(f"{self.servo_type} winding")
-        self.pwm.ChangeDutyCycle(self.min_pwm)
-        time.sleep(0.5)
-        self.pwm.ChangeDutyCycle(0)  # Stop signal to prevent jitter
+        self.servo.value = self.min_value
+        sleep(20)
+        self.servo.value = None  # Stop signal to prevent jitter
 
     def command_unwind(self):
-        """Rotate servo in 'unwind' direction (maximum PWM)."""
+        """Rotate servo in 'unwind' direction (maximum)."""
         print(f"{self.servo_type} unwinding")
-        self.pwm.ChangeDutyCycle(self.max_pwm)
-        time.sleep(0.5)
-        self.pwm.ChangeDutyCycle(0)  # Stop signal to prevent jitter
+        self.servo.value = self.max_value
+        sleep(20)
+        self.servo.value = None  # Stop signal to prevent jitter
 
     def cleanup(self):
-        """Release GPIO resources."""
-        self.pwm.stop()
-        GPIO.cleanup(self.gpio_pin)
-""
+        """Release resources (gpiozero handles this automatically)."""
+        self.servo.close()

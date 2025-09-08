@@ -1,8 +1,11 @@
-from Deployable.Commanders.commanders import WaterLandingHandler
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),'..')))
+from Deployable.Handlers.handlers import WaterLandingHandler
 import time
 
 def main():
-    water_sensor = WaterLandingHandler(pin=26)
+    water_sensor = WaterLandingHandler(pin=17)
 
     try:
         while True:
