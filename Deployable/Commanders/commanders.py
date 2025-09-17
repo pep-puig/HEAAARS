@@ -3,6 +3,7 @@ from gpiozero import Servo
 from time import sleep
 from dronekit import VehicleMode
 import RPi.GPIO as GPIO
+from pymavlink import mavutil
 
 class Navigator:
     """
@@ -12,7 +13,7 @@ class Navigator:
     def __init__(self):
         # Default speeds (can be overridden by params)
         self.aerial_climb_speed = 1.0
-        self.aerial_flight_speed = 3.0
+        self.aerial_flight_speed = 1.0
         self.aquatic_swim_speed = 1.0
 
     # ------------------ VEHICLE STATUS CHECKS ------------------
@@ -51,6 +52,61 @@ class Navigator:
             print("Arming vehicle...")
             time.sleep(0.5)
         print("Vehicle armed!")
+
+    def disarm_aerial(self, vehicle, force=False):
+        """
+        Disarm the given vehicle safely using MAVLink.
+        
+        :param vehicle: DroneKit vehicle instance
+        :param force: If True, force disarm even in air (use with caution!)
+        """
+        print("Disarming vehicle...")
+
+        # Send MAVLink disarm command
+        vehicle._master.mav.command_long_send(
+            vehicle._master.target_system,
+            vehicle._master.target_component,
+            mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
+            0,            # confirmation
+            0,            # param1 = 0 → disarm
+            21196 if force else 0,  # param2 = 21196 → force disarm
+            0, 0, 0, 0, 0
+        )
+
+        time.sleep(1)
+
+        # Wait until the vehicle is disarmed
+        while vehicle.armed:
+            print(" Waiting for vehicle to disarm...")
+            time.sleep(1)
+
+        print("Vehicle disarmed successfully.")
+
+    def disarm_aquatic(self, vehicle):
+        """
+        Switch Rover to HOLD mode and disarm.
+        """
+        print("Switching to HOLD mode...")
+        vehicle.mode = VehicleMode("HOLD")
+
+        time.sleep(1)
+
+        # wait until mode changes
+        while vehicle.mode.name != "HOLD":
+            print(" Waiting for mode change...")
+            time.sleep(0.5)
+
+        print("Now disarming rover...")
+        vehicle.armed = False
+
+        time.sleep(1)
+
+        # wait until disarmed
+        while vehicle.armed:
+            print(" Waiting for rover to disarm...")
+            time.sleep(0.5)
+
+        print("Rover disarmed successfully.")
 
     def take_off(self, vehicle, target_altitude):
         """

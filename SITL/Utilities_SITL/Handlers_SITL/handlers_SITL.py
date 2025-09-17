@@ -3,6 +3,8 @@ import os
 import math
 import time
 from dronekit import LocationGlobal, LocationGlobalRelative
+import RPi.GPIO as GPIO
+from RTC.ds1302 import DS1302
 
 class PoseHandler:
     """
@@ -141,6 +143,98 @@ class BatteryHandler:
         """
         return self.get_battery(vehicle) < threshold
     
+class TimeHandlerRTC:
+    """
+    Handles timing logic for mission timeout, water landing timeout,
+    and correction timeout. Uses DS1302 RTC for tracking.
+    """
+
+    def __init__(self, robot, clk_pin=3, dat_pin=2, rst_pin=22):
+        """
+        :param robot: RobotSystem, used to access timing thresholds in robot.params
+        :param rst_pin: GPIO pin for DS1302 (RST) -> IO22
+        :param io_pin: GPIO pin for DS1302 (data) -> IO2
+        :param sclk_pin: GPIO pin for DS1302 (clk) -> IO3
+        """
+        self.robot = robot
+        self.mission_start_time = None
+        self.water_landing_start_time = None
+        self.correction_start_time = None
+
+        # Setup GPIO and initialize DS1302
+        GPIO.setmode(GPIO.BCM)
+        self.ds = DS1302(clk_pin, dat_pin, rst_pin) #CLK,DAT,RST in that order
+
+    # ---------- RTC Helpers ----------
+
+    def _rtc_now_seconds(self):
+        """
+        Converts RTC datetime [Y, M, D, weekday, H, M, S, 0] into total seconds of the day.
+        """
+        dt = self.ds.date_time()
+        hour, minute, second = dt[4], dt[5], dt[6]
+        return hour * 3600 + minute * 60 + second
+
+    # ---------- Timers ----------
+
+    def start_counter(self, counter_name):
+        """
+        Starts one of the three timers: 'mission', 'water', or 'correction'.
+        """
+        current_sec = self._rtc_now_seconds()
+
+        if counter_name == "mission":
+            self.mission_start_time = current_sec
+        elif counter_name == "water":
+            self.water_landing_start_time = current_sec
+        elif counter_name == "correction":
+            self.correction_start_time = current_sec
+        else:
+            raise ValueError("Invalid counter name. Use 'mission', 'water', or 'correction'.")
+
+    def _elapsed(self, start_time):
+        if start_time is None:
+            return 0
+        now = self._rtc_now_seconds()
+        # Handle rollover at midnight
+        if now < start_time:
+            return (86400 - start_time) + now  # 86400 seconds in a day
+        return now - start_time
+
+    def is_mission_timeout(self):
+        elapsed = self._elapsed(self.mission_start_time)
+        threshold = self.robot.params.get("mission_timeout", 0)
+        return elapsed >= threshold
+
+    def is_water_landing_timeout(self):
+        elapsed = self._elapsed(self.water_landing_start_time)
+        threshold = self.robot.params.get("water_landing_timeout", 0)
+        return elapsed >= threshold
+
+    def is_correction_timeout(self):
+        elapsed = self._elapsed(self.correction_start_time)
+        threshold = self.robot.params.get("correction_timeout", 0)
+        return elapsed >= threshold
+
+    # ---------- RTC direct methods ----------
+
+    def set_time(self, datetime_list):
+        """
+        Sets the RTC datetime.
+        datetime_list format: [year, month, day, weekday, hour, minute, second, 0]
+        """
+        self.ds.date_time(datetime_list)
+
+    def get_time(self):
+        """
+        Returns the current datetime from the RTC.
+        """
+        return self.ds.date_time()
+
+    # Optional: clean up GPIO
+    def cleanup(self):
+        GPIO.cleanup()
+        
 class TimeHandler:
     """
     Handles timing logic for mission timeout, water landing timeout,

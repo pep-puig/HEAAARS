@@ -3,6 +3,7 @@ import os
 import math
 import time
 import RPi.GPIO as GPIO
+from Deployable.RTC.RTC.DS1302RTC.ds1302 import DS1302
 from dronekit import LocationGlobal, LocationGlobalRelative
 
 class PoseHandler:
@@ -103,14 +104,15 @@ class BatteryHandler:
     Provides access to battery percentage and threshold-based check for low battery.
     """
 
-    def __init__(self, robot):
+    def __init__(self):
         """
         Initializes the BatteryHandler with a reference to the RobotSystem.
         This allows the handler to access any vehicle through robot (if needed).
         
         :param robot: RobotSystem instance containing vehicle objects.
         """
-        self.robot = robot
+        pass
+        #self.robot = robot
 
     def get_battery(self, vehicle):
         """
