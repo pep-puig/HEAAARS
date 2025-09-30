@@ -17,6 +17,7 @@ class StateEnum(Enum):
     TAKEOFF = auto()
     FLY2TARGET = auto()
     LANDINGATTARGET = auto()
+    MONITORING = auto()
     SWIM2TARGET = auto()
     RETURN2HOME = auto()
     LANDINGATHOME = auto()

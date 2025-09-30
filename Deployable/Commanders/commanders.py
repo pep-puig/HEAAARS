@@ -53,11 +53,11 @@ class Navigator:
         try:
             print(f"Connecting to Pixhawk on {connection_str} at {baud} baud...")
             self.vehicle = connect(connection_str, baud=baud, wait_ready=True, timeout=60)
-            print("✅ Connection successful!")
+            print("Connection successful!")
             print(f"Autopilot version: {self.vehicle.version}")
             return True
         except Exception as e:
-            print("❌ Connection failed!")
+            print("Connection failed!")
             print("Error:", e)
             self.vehicle = None
             return False
@@ -66,7 +66,7 @@ class Navigator:
         """Safely close the Pixhawk connection."""
         if self.vehicle:
             self.vehicle.close()
-            print("🔌 Disconnected from Pixhawk")
+            print("Disconnected from Pixhawk")
             self.vehicle = None
 
     def arm_vehicle(self, vehicle):

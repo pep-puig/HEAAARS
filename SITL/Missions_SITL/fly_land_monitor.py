@@ -13,6 +13,8 @@ class Init(State):
     def run(self, robot):
         print("Entering Init state...")
 
+        # ADD A CHECK THAT IT IS NOT IN GUIDED  TO GUARANTEE THAT PEOPLE WILL HAVE WALKED AWAY
+
         # Load parameters
         robot.params = robot.parameters.get_params()
         battery_threshold = robot.params["thresholds"]["min_battery_threshold"]
@@ -24,6 +26,8 @@ class Init(State):
             args = parser.parse_args()
             connection_string = args.connect
             robot.aerial = connect(connection_string, wait_ready=True)
+
+            # catch error if doesnt connect to vehicle
 
         print(f"Battery level: {robot.aerial.battery.level}%")
 
@@ -226,6 +230,7 @@ class Monitoring(State):
 
         # Loop until time exceeded
         while (time.time() - start_time) < max_monitor_time:
+            
             time.sleep(0.5)  # could be 1.0s if we want full-second resolution
 
         print("Monitoring period finished, returning to TakeOff.")
