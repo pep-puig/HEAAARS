@@ -103,14 +103,15 @@ class BatteryHandler:
     Provides access to battery percentage and threshold-based check for low battery.
     """
 
-    def __init__(self, robot):
+    def __init__(self):
         """
         Initializes the BatteryHandler with a reference to the RobotSystem.
         This allows the handler to access any vehicle through robot (if needed).
         
         :param robot: RobotSystem instance containing vehicle objects.
         """
-        self.robot = robot
+        pass
+        #self.robot = robot
 
     def get_battery(self, vehicle):
         """
@@ -223,6 +224,13 @@ class WaterLandingHandler:
         """
         sensor_val = GPIO.input(self.pin)
         return sensor_val == GPIO.HIGH    # True if water, False if dry
+
+    def cleanup(self):
+        """
+        Releases the GPIO pin used by the water sensor.
+        """
+        GPIO.cleanup(self.pin)
+
 class ParameterHandler:
     """
     Loads mission configuration parameters from a JSON file.

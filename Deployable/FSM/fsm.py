@@ -15,11 +15,12 @@ from Handlers.handlers import (
 class StateEnum(Enum):
     INIT = auto()
     TAKEOFF = auto()
-    FLY_TO_TARGET = auto()
-    LANDING_TARGET = auto()
-    SWIM_TO_TARGET = auto()
-    RETURN_HOME = auto()
-    LANDING_HOME = auto()
+    FLY2TARGET = auto()
+    LANDINGATTARGET = auto()
+    MONITORING = auto()
+    SWIM2TARGET = auto()
+    RETURN2HOME = auto()
+    LANDINGATHOME = auto()
 
 # ----------------------
 # State abstact class is a template for what all state will have
@@ -79,7 +80,7 @@ class RobotSystem():
         # Handlers
         self.pose = PoseHandler()
         self.battery = BatteryHandler()
-        self.parameters = ParameterHandler()      # Reads mission JSON
+        self.parameters = ParameterHandler("params.json")      # Reads mission JSON
         self.time = TimeHandler()
         self.water_landing = WaterLandingHandler()
 
