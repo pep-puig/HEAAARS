@@ -1,7 +1,7 @@
 import time
 from gpiozero import Servo
 from time import sleep
-from dronekit import VehicleMode
+from dronekit import connect, VehicleMode
 import RPi.GPIO as GPIO
 from pymavlink import mavutil
 
@@ -42,6 +42,32 @@ class Navigator:
         self.aquatic_swim_speed = swim_speed
 
     # ------------------ VEHICLE COMMANDS ------------------
+
+    def connect_pixhawk(self, connection_str="/dev/serial0", baud=57600):
+        """
+        Connects to a Pixhawk autopilot via DroneKit.
+        :param connection_str: e.g. '/dev/ttyAMA0' for UART or '/dev/ttyACM0' for USB
+        :param baud: Baud rate (57600 for telemetry, 115200 for USB)
+        :return: True if connection successful, False otherwise
+        """
+        try:
+            print(f"Connecting to Pixhawk on {connection_str} at {baud} baud...")
+            self.vehicle = connect(connection_str, baud=baud, wait_ready=True, timeout=60)
+            print("✅ Connection successful!")
+            print(f"Autopilot version: {self.vehicle.version}")
+            return True
+        except Exception as e:
+            print("❌ Connection failed!")
+            print("Error:", e)
+            self.vehicle = None
+            return False
+
+    def disconnect_pixhawk(self):
+        """Safely close the Pixhawk connection."""
+        if self.vehicle:
+            self.vehicle.close()
+            print("🔌 Disconnected from Pixhawk")
+            self.vehicle = None
 
     def arm_vehicle(self, vehicle):
         """

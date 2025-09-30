@@ -2,7 +2,7 @@ import time
 from time import sleep
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),'..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),'../../..')))
 from Deployable.Commanders.commanders import ServoController
 
 def main():

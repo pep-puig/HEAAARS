@@ -3,7 +3,6 @@ import os
 import math
 import time
 import RPi.GPIO as GPIO
-from Deployable.RTC.RTC.DS1302RTC.ds1302 import DS1302
 from dronekit import LocationGlobal, LocationGlobalRelative
 
 class PoseHandler:
